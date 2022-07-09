@@ -7,6 +7,25 @@ service User{
   rpc GetUserByMobile(MobileRequest) returns (UserInfoResponse); //通过mobile查询用户
   rpc GetUserById(IdRequest) returns (UserInfoResponse); //通过id查询用户
   rpc CreateUser(CreateUserInfo) returns (UserInfoResponse); // 添加用户
+  rpc UpdateUser(UpdateUserInfo) returns (google.protobuf.Empty); // 更新用户
+  rpc CheckPassWord(PasswordCheckInfo) returns (CheckResponse); //检查密码
+}
+
+message PasswordCheckInfo {
+  string password = 1;
+  string encryptedPassword = 2;
+}
+
+
+message CheckResponse{
+  bool success = 1;
+}
+
+message UpdateUserInfo {
+  int32 id = 1;
+  string nickName = 2;
+  string gender = 3;
+  uint64 birthDay = 4;
 }
 
 message PageInfo {

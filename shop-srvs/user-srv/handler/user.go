@@ -3,10 +3,14 @@ package handler
 import (
 	"crypto/sha512"
 	"fmt"
-	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/codes"
 	"github.com/anaskhan96/go-password-encoder"
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
+	"strings"
+	"time"
 
 	"context"
 
@@ -137,3 +141,30 @@ func (s *UserServer) GetUserById(c context.Context, req *proto.IdRequest) (*prot
 	return &userInfoRsp, nil
 }
 
+func (s *UserServer) UpdateUser(c context.Context, req *proto.UpdateUserInfo) (*emptypb.Empty, error) {
+	//个人中心更新用户
+	var user model.User
+	result := global.DB.First(&user, req.Id)
+	if result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.NotFound, "用户不存在")
+	}
+
+	birthDay := time.Unix(int64(req.BirthDay), 0)
+	user.NickName = req.NickName
+	user.Birthday = &birthDay
+	user.Gender = req.Gender
+
+	result = global.DB.Save(&user)
+	if result.Error != nil {
+		return nil, status.Errorf(codes.Internal, result.Error.Error())
+	}
+	return &empty.Empty{}, nil
+}
+
+func (s *UserServer) CheckPassWord(c context.Context, req *proto.PasswordCheckInfo) (*proto.CheckResponse, error) {
+	//校验密码
+	options := &password.Options{16, 100, 32, sha512.New}
+	passwordInfo := strings.Split(req.EncryptedPassword, "$")
+	check := password.Verify(req.Password, passwordInfo[2], passwordInfo[3], options)
+	return &proto.CheckResponse{Success: check}, nil
+}
