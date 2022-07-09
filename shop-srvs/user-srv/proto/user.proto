@@ -1,0 +1,23 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+option go_package = ".;proto";
+
+service User{
+  rpc CreateUser(CreateUserInfo) returns (UserInfoResponse); // 添加用户
+}
+
+message CreateUserInfo {
+  string nickName = 1;
+  string passWord = 2;
+  string mobile = 3;
+}
+
+message UserInfoResponse {
+  int32 id = 1;
+  string passWord = 2;
+  string mobile = 3;
+  string nickName = 4;
+  uint64 birthDay = 5;
+  string gender = 6;
+  int32 role = 7;
+}
