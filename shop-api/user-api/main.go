@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin/binding"
+	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	"os"
 	"os/signal"
@@ -25,6 +26,9 @@ func main() {
 	initialize.InitConfig()
 	initialize.InitSrvConn()
 	Router := initialize.InitRouters()
+	if err := initialize.InitTrans("zh"); err != nil {
+		panic(err)
+	}
 
 	viper.AutomaticEnv()
 	//为了能支持集群部署，线上环境启动获取端口号，如果是本地开发环境为了方便调试，端口号固定
@@ -39,6 +43,12 @@ func main() {
 	//注册验证器
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		_ = v.RegisterValidation("mobile", myvalidator.ValidateMobile)
+		_ = v.RegisterTranslation("mobile", global.Trans, func(ut ut.Translator) error {
+			return ut.Add("mobile", "{0} 非法的手机号码!", true) // see universal-translator for details
+		}, func(ut ut.Translator, fe validator.FieldError) string {
+			t, _ := ut.T("mobile", fe.Field())
+			return t
+		})
 	}
 
 	consul_client := consul.NewRegistryClient(global.ServerConfig.ConsulInfo.Host, global.ServerConfig.ConsulInfo.Port)
