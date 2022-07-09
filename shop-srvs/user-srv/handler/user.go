@@ -14,7 +14,9 @@ import (
 	"shop-srvs/user-srv/proto"
 )
 
-type Service struct {}
+type UserServer struct {
+	proto.UnimplementedUserServer
+}
 
 func ModelToRsponse(user model.User) proto.UserInfoResponse{
 	//在grpc的message中字段有默认值，你不能随便赋值nil进去，容易出错
@@ -33,7 +35,7 @@ func ModelToRsponse(user model.User) proto.UserInfoResponse{
 	return userInfoRsp
 }
 
-func (s *Service) CreateUser(c context.Context, req *proto.CreateUserInfo) (*proto.UserInfoResponse, error){
+func (s *UserServer) CreateUser(c context.Context, req *proto.CreateUserInfo) (*proto.UserInfoResponse, error){
 	user := model.User{
 		Mobile: req.Mobile,
 	}
