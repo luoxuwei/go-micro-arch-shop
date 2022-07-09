@@ -27,6 +27,27 @@ func TestCreateUser(){
 	}
 }
 
+func TestGetUserList(){
+	rsp, err := userSrvClient.GetUserList(context.Background(), &proto.PageInfo{
+		Pn:    1,
+		PSize: 5,
+	})
+	if err != nil {
+		panic(err)
+	}
+	for _, user := range rsp.Data {
+		fmt.Println(user.Mobile, user.NickName, user.PassWord)
+		checkRsp, err := userSrvClient.CheckPassWord(context.Background(), &proto.PasswordCheckInfo{
+			Password:          "admin123",
+			EncryptedPassword: user.PassWord,
+		})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(checkRsp.Success)
+	}
+}
+
 func main() {
     initialize.InitConfig()
 
@@ -65,6 +86,6 @@ func main() {
 
 	userSrvClient = proto.NewUserClient(userConn)
 
-	TestCreateUser()
-
+	//TestCreateUser()
+	TestGetUserList()
 }
