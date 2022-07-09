@@ -20,6 +20,7 @@ func main() {
 
 	initialize.InitLogger()
 	initialize.InitConfig()
+	initialize.InitSrvConn()
 	Router := initialize.InitRouters()
 
 	viper.AutomaticEnv()
