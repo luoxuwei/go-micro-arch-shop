@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc/codes"
@@ -9,8 +10,11 @@ import (
 	"net/http"
 	"shop-api/user-api/forms"
 	"shop-api/user-api/global"
+	"shop-api/user-api/middlewares"
+	"shop-api/user-api/models"
 	"shop-api/user-api/proto"
 	"strings"
+	"time"
 )
 
 //去掉struct名称
@@ -71,10 +75,32 @@ func PassWordLogin(c *gin.Context)  {
 				"msg":"登录失败",
 			})
 		} else {
-			if (passRsp.Success) {
+			if passRsp.Success {
+				j := middlewares.NewJWT()
+				claims := models.CustomClaims{
+					ID:             uint(rsp.Id),
+					NickName:       rsp.NickName,
+					AuthorityId:    uint(rsp.Role),
+					StandardClaims: jwt.StandardClaims{
+						NotBefore: time.Now().Unix(), //签名的生效时间
+						ExpiresAt: time.Now().Unix() + 60*60*24*30, //30天过期
+						Issuer: "imooc",
+					},
+				}
+				token, err := j.CreateToken(claims)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"msg":"生成token失败",
+					})
+					return
+				}
 				c.JSON(http.StatusOK, gin.H{
-					"msg":"登录成功",
+					"id": rsp.Id,
+					"nick_name": rsp.NickName,
+					"token": token,
+					"expired_at": (time.Now().Unix() + 60*60*24*30)*1000,
 				})
+
 			} else {
 				c.JSON(http.StatusInternalServerError, map[string]string{
 					"msg":"登录失败",

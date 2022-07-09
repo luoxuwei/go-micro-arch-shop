@@ -10,3 +10,6 @@ user_srv:
 consul:
   host: '192.168.0.101'
   port: 8500
+
+jwt:
+  key: 'LqyebYfpj30vvaasqtZ9nokn4x3qjhTB'
