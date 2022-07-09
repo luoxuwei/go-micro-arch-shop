@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	_ "github.com/mbobakov/grpc-consul-resolver"
 	"shop-api/user-api/global"
 	"shop-api/user-api/proto"
 )
