@@ -79,8 +79,7 @@ func main() {
 	registration.Tags = []string{"xuwei", "user", "srv"}
 	registration.Address = "192.168.0.113"
 	registration.Check = check
-	//1. 如何启动两个服务
-	//2. 即使我能够通过终端启动两个服务，但是注册到consul中的时候也会被覆盖
+
 	err = client.Agent().ServiceRegister(registration)
 	if err != nil {
 		panic(err)
