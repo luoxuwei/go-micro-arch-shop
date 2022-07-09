@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,6 +12,7 @@ import (
 	"shop-api/user-api/initialize"
 	"shop-api/user-api/utils"
 	"shop-api/user-api/utils/consul"
+    myvalidator "shop-api/user-api/validator"
 
 	"github.com/satori/go.uuid"
 	"github.com/spf13/viper"
@@ -31,6 +34,11 @@ func main() {
 		if err == nil {
 			global.ServerConfig.Port = port
 		}
+	}
+
+	//注册验证器
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		_ = v.RegisterValidation("mobile", myvalidator.ValidateMobile)
 	}
 
 	consul_client := consul.NewRegistryClient(global.ServerConfig.ConsulInfo.Host, global.ServerConfig.ConsulInfo.Port)
