@@ -1,0 +1,11 @@
+name: 'user-api'
+
+port: 8088
+tags: ['xuwei','user','api']
+
+user_srv:
+  name: 'user-srv'
+
+consul:
+  host: '192.168.0.101'
+  port: 8500
