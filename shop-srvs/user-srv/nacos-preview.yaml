@@ -1,4 +1,4 @@
-name: 'user'
+name: 'user-srv'
 
 mysql:
   host: '192.168.0.101'
