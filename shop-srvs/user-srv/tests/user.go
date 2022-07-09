@@ -44,6 +44,10 @@ func TestGetUserList(){
 		if err != nil {
 			panic(err)
 		}
+		userSrvClient.UpdateUser(context.Background(), &proto.UpdateUserInfo{
+			Id: user.Id,
+			NickName: user.NickName+"0",
+		})
 		fmt.Println(checkRsp.Success)
 	}
 }
