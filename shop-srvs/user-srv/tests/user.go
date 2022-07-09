@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/hashicorp/consul/api"
 	"go.uber.org/zap"
@@ -11,6 +12,21 @@ import (
 )
 
 var userSrvClient proto.UserClient
+
+func TestCreateUser(){
+	for i := 0; i<10; i++ {
+		rsp, err := userSrvClient.CreateUser(context.Background(), &proto.CreateUserInfo{
+			NickName: fmt.Sprintf("Xuwei%d",i),
+			Mobile: fmt.Sprintf("1878222222%d",i),
+			PassWord: "admin123",
+		})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(rsp.Id)
+	}
+}
+
 func main() {
     initialize.InitConfig()
 
@@ -48,5 +64,7 @@ func main() {
 	}
 
 	userSrvClient = proto.NewUserClient(userConn)
+
+	TestCreateUser()
 
 }
