@@ -12,3 +12,11 @@ func InitUserRouter(Router *gin.RouterGroup){
 		UserRouter.POST("pwd_login", api.PassWordLogin)
 	}
 }
+
+func InitBaseRouter(Router *gin.RouterGroup){
+	BaseRouter := Router.Group("base")
+	{
+		BaseRouter.GET("captcha", api.GetCaptcha)
+	}
+
+}

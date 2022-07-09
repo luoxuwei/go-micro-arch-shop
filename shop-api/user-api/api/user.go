@@ -46,6 +46,13 @@ func PassWordLogin(c *gin.Context)  {
 		return
 	}
 
+	if !store.Verify(passwordLoginForm.CaptchaId, passwordLoginForm.Captcha, false){
+		c.JSON(http.StatusBadRequest, gin.H{
+			"captcha":"验证码错误",
+		})
+		return
+	}
+
 	if rsp, err := global.UserSrvClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
 		Mobile: passwordLoginForm.Mobile,
 	}); err != nil {
