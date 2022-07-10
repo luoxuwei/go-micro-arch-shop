@@ -13,3 +13,17 @@ consul:
 
 jwt:
   key: 'LqyebYfpj30vvaasqtZ9nokn4x3qjhTB'
+
+aliyun:
+  key: 'LTAIN1iOOhkf7Nc8'
+  secrect: 'rr4tVYT0OmLQ7jDOAAaqEoczTlGIPD'
+
+sms:
+  sign_name: '阿里云短信测试'
+  template_code: 'SMS_154950909'
+
+
+redis:
+  host: '192.168.0.101'
+  port: 6379
+  expire: 300

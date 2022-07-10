@@ -1,5 +1,10 @@
 package forms
 
+type SendSmsForm struct {
+	Mobile string `form:"mobile" json:"mobile" binding:"required,mobile"`
+	Type uint `form:"type" json:"type" binding:"required,oneof=1 2"`
+	//注册发送短信验证码和动态验证码登录发送验证码
+}
 
 type PassWordLoginForm struct {
 	Mobile string `form:"mobile" json:"mobile" binding:"required,mobile"`
