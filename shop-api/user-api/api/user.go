@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -191,4 +193,70 @@ func PassWordLogin(c *gin.Context)  {
 			}
 		}
 	}
+}
+
+func Register(c *gin.Context) {
+
+	registerForm := forms.RegisterForm{}
+	if err := c.ShouldBind(&registerForm); err != nil {
+		HandleValidatorError(c, err)
+		return
+	}
+
+	//验证码
+	rdb := redis.NewClient(&redis.Options{
+		Addr:fmt.Sprintf("%s:%d", global.ServerConfig.RedisInfo.Host, global.ServerConfig.RedisInfo.Port),
+	})
+	value, err := rdb.Get(context.Background(), registerForm.Mobile).Result()
+	if err == redis.Nil{
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":"验证码错误",
+		})
+		return
+	}else{
+		if value != registerForm.Code {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code":"验证码错误",
+			})
+			return
+		}
+	}
+
+	user, err := global.UserSrvClient.CreateUser(context.Background(), &proto.CreateUserInfo{
+		NickName: registerForm.Mobile,
+		PassWord: registerForm.PassWord,
+		Mobile:   registerForm.Mobile,
+	})
+
+	if err != nil {
+		zap.S().Errorf("[Register] 查询 【新建用户失败】失败: %s", err.Error())
+		HandleGrpcErrorToHttp(err, c)
+		return
+	}
+
+	j := middlewares.NewJWT()
+	claims := models.CustomClaims{
+		ID:             uint(user.Id),
+		NickName:       user.NickName,
+		AuthorityId:    uint(user.Role),
+		StandardClaims: jwt.StandardClaims{
+			NotBefore: time.Now().Unix(), //签名的生效时间
+			ExpiresAt: time.Now().Unix() + 60*60*24*30, //30天过期
+			Issuer: "imooc",
+		},
+	}
+	token, err := j.CreateToken(claims)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg":"生成token失败",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id": user.Id,
+		"nick_name": user.NickName,
+		"token": token,
+		"expired_at": (time.Now().Unix() + 60*60*24*30)*1000,
+	})
 }
