@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/consul/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -11,7 +12,7 @@ import (
 	"shop-srvs/goods-srv/proto"
 )
 
-
+var goodsClient proto.GoodsClient
 
 func main() {
     initialize.InitConfig()
@@ -48,5 +49,9 @@ func main() {
 			"msg", err.Error(),
 		)
 	}
-
+	goodsClient = proto.NewGoodsClient(Conn)
+	_, err = goodsClient.BannerList(context.Background(), &empty.Empty{})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
