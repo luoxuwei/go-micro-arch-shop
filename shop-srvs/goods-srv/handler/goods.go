@@ -110,3 +110,28 @@ func (s *GoodsServer) GoodsList(ctx context.Context, req *proto.GoodsFilterReque
 
     return goodsListResponse, nil
 }
+
+//批量获取商品
+func (s *GoodsServer) BatchGetGoods(ctx context.Context, req *proto.BatchGoodsIdInfo) (*proto.GoodsListResponse, error){
+	goodsListResponse := &proto.GoodsListResponse{}
+	var goods []model.Goods
+
+	result := global.DB.Where(req.Id).Find(&goods)
+	for _, good := range goods {
+		goodsInfoResponse := ModelToResponse(good)
+		goodsListResponse.Data = append(goodsListResponse.Data, &goodsInfoResponse)
+	}
+	goodsListResponse.Total = int32(result.RowsAffected)
+	return goodsListResponse, nil
+}
+
+func (s *GoodsServer) GetGoodsDetail(ctx context.Context, req *proto.GoodInfoRequest) (*proto.GoodsInfoResponse, error){
+	var goods model.Goods
+
+	if result := global.DB.Preload("Category").Preload("Brands").First(&goods, req.Id); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.NotFound, "商品不存在")
+	}
+	goodsInfoResponse := ModelToResponse(goods)
+	return &goodsInfoResponse, nil
+}
+
