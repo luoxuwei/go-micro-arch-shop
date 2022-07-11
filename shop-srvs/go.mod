@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/anaskhan96/go-password-encoder v0.0.0-20201010210601-c765b799fd72
+	github.com/golang/protobuf v1.5.2
 	github.com/hashicorp/consul/api v1.12.0
 	github.com/nacos-group/nacos-sdk-go v1.1.1
 	github.com/satori/go.uuid v1.2.0
@@ -23,7 +24,6 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.2.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
