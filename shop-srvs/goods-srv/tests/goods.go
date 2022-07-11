@@ -50,8 +50,90 @@ func main() {
 		)
 	}
 	goodsClient = proto.NewGoodsClient(Conn)
-	_, err = goodsClient.BannerList(context.Background(), &empty.Empty{})
+	//TestGetBrandList()
+	//TestGetCategoryBrandList()
+	//TestGetCategoryList()
+	//TestGetSubCategoryList()
+	TestGetGoodsList()
+}
+
+func TestGetBrandList(){
+	rsp, err := goodsClient.BrandList(context.Background(), &proto.BrandFilterRequest{
+	})
 	if err != nil {
-		fmt.Println(err.Error())
+		panic(err)
 	}
+	fmt.Println(rsp.Total)
+	for _, brand := range rsp.Data {
+		fmt.Println(brand.Name)
+	}
+}
+
+func TestGetCategoryBrandList(){
+	rsp, err := goodsClient.CategoryBrandList(context.Background(), &proto.CategoryBrandFilterRequest{
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(rsp.Total)
+	fmt.Println(rsp.Data)
+}
+
+func TestGetCategoryList(){
+	rsp, err := goodsClient.GetAllCategorysList(context.Background(), &empty.Empty{
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(rsp.Total)
+	fmt.Println(rsp.JsonData)
+}
+
+func TestGetSubCategoryList(){
+	rsp, err := goodsClient.GetSubCategory(context.Background(), &proto.CategoryListRequest{
+		Id:       135487,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(rsp.SubCategorys)
+}
+
+func TestGetGoodsList(){
+	rsp, err := goodsClient.GoodsList(context.Background(), &proto.GoodsFilterRequest{
+		TopCategory: 130361,
+		PriceMin: 90,
+		//KeyWords: "深海速冻",
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(rsp.Total)
+	for _, good := range rsp.Data {
+		fmt.Println(good.Name, good.ShopPrice)
+	}
+}
+
+func TestBatchGetGoods(){
+	rsp, err := goodsClient.BatchGetGoods(context.Background(), &proto.BatchGoodsIdInfo{
+		Id: []int32{421, 422, 423},
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(rsp.Total)
+	for _, good := range rsp.Data {
+		fmt.Println(good.Name, good.ShopPrice)
+	}
+}
+
+func TestGetGoodsDetail(){
+	rsp, err := goodsClient.GetGoodsDetail(context.Background(), &proto.GoodInfoRequest{
+		Id: 421,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(rsp.Name)
+	fmt.Println(rsp.DescImages)
 }
