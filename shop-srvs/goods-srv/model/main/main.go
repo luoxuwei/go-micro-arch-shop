@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	dsn := "root:root@tcp(192.168.0.101:3306)/shop_user_srv?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:root@tcp(192.168.0.101:3306)/shop_goods_srv?charset=utf8mb4&parseTime=True&loc=Local"
 
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
@@ -37,6 +37,6 @@ func main() {
 	}
 
 	// 迁移 schema
-	_ = db.AutoMigrate(&model.User{})
+	_ = db.AutoMigrate(&model.Category{}, &model.Brands{}, &model.GoodsCategoryBrand{}, &model.Banner{}, &model.Goods{})
 
 }
