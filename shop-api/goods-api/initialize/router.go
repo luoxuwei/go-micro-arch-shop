@@ -20,5 +20,6 @@ func InitRouters() *gin.Engine {
 	ApiGroup.Use(middlewares.Cors())
 	router.InitGoodsRouter(ApiGroup)
 	router.InitCategoryRouter(ApiGroup)
+	router.InitBannerRouter(ApiGroup)
 	return Router
 }
