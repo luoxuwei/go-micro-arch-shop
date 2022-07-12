@@ -62,5 +62,3 @@ func HandleValidatorError(c *gin.Context, err error){
 	})
 	return
 }
-
-
