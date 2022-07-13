@@ -37,6 +37,6 @@ func main() {
 	}
 
 	// 迁移 schema
-	//_ = db.AutoMigrate(&model.Category{}, &model.Brands{}, &model.GoodsCategoryBrand{}, &model.Banner{}, &model.Goods{})
+	_ = db.AutoMigrate(&model.Inventory{})
 
 }
