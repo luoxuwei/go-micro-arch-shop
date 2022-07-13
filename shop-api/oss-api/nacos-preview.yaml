@@ -1,0 +1,20 @@
+name: 'oss-api'
+
+host: '192.168.0.113'
+port: 8088
+tags: ['xuwei','oss','api']
+
+oss:
+  key: 'LTAIN1iOOhkf7Nc8'
+  secrect: 'rr4tVYT0OmLQ7jDOAAaqEoczTlGIPD'
+  host: 'http://xuwei-shop-dev.oss-cn-beijing.aliyuncs.com'
+  callback_url: ''
+  upload_dir: 'test'
+
+consul:
+  host: '192.168.139.9'
+  port: 8500
+
+jwt:
+  key: 'LqyebYfpj30vvaasqtZ9nokn4x3qjhTB'
+

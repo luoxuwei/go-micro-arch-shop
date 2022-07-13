@@ -8,7 +8,7 @@ user_srv:
   name: 'user-srv'
 
 consul:
-  host: '192.168.0.101'
+  host: '192.168.139.9'
   port: 8500
 
 jwt:
@@ -24,6 +24,6 @@ sms:
 
 
 redis:
-  host: '192.168.0.101'
+  host: '192.168.139.9'
   port: 6379
   expire: 300
