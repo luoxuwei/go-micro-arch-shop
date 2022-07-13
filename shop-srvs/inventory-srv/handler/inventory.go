@@ -62,3 +62,22 @@ func (*InventoryServer) Sell(ctx context.Context, req *proto.SellInfo) (*emptypb
     tx.Commit()
     return &emptypb.Empty{}, nil
 }
+
+func (s *InventoryServer) Reback(c context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
+	//要么全部成功，要么全部失败
+	tx := global.DB.Begin()
+	for _, goodInfo := range req.GoodsInfo {
+		var inv model.Inventory
+		if result := global.DB.First(&inv, goodInfo.GoodsId); result.RowsAffected == 0 {
+			tx.Rollback() //回滚
+			return nil, status.Errorf(codes.InvalidArgument, "没有库存信息")
+		}
+
+		//减扣操作是典型的并发问题，需要保证并发安全，不然会出现数据不一致的问题
+		//数据不一致问题，不是事务解决的问题，是锁，最终要用分布式锁
+		inv.Stocks -= goodInfo.Num
+		tx.Save(&inv)
+	}
+	tx.Commit()
+	return &emptypb.Empty{}, nil
+}
