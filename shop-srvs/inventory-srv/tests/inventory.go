@@ -9,6 +9,7 @@ import (
 	"shop-srvs/inventory-srv/global"
 	"shop-srvs/inventory-srv/initialize"
 	"shop-srvs/inventory-srv/proto"
+	"sync"
 )
 
 var inventoryClient proto.InventoryClient
@@ -52,7 +53,13 @@ func main() {
 	//TestSetInv(422, 10)
 	//TestInvDetail(421)
 	//TestSell()
-	TestReback()
+	//TestReback()
+	var wg sync.WaitGroup
+	wg.Add(10)
+	for i := 0; i<10; i++ {
+		go TestSell(&wg)
+	}
+	wg.Wait()
 }
 
 func TestSetInv(goodsId, Num int32){
@@ -76,14 +83,15 @@ func TestInvDetail(goodsId int32) {
 	fmt.Println(rsp.Num)
 }
 
-func TestSell() {
+func TestSell(wg *sync.WaitGroup) {
+	defer wg.Done()
 	/*
 		要测试事务的效果，
 	*/
 	_, err := inventoryClient.Sell(context.Background(), &proto.SellInfo{
 		GoodsInfo: []*proto.GoodsInvInfo{
 			{GoodsId: 421, Num: 1},
-			{GoodsId: 422, Num: 1},
+			//{GoodsId: 422, Num: 1},
 		},
 	})
 	if err != nil {
