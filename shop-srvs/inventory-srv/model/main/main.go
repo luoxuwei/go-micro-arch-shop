@@ -37,6 +37,6 @@ func main() {
 	}
 
 	// 迁移 schema
-	_ = db.AutoMigrate(&model.Inventory{})
+	_ = db.AutoMigrate(&model.Inventory{}, &model.InventoryHistory{})
 
 }

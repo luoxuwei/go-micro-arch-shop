@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/consul/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -12,7 +11,7 @@ import (
 	"shop-srvs/inventory-srv/proto"
 )
 
-var goodsClient proto.GoodsClient
+var inventoryClient proto.InventoryClient
 
 func main() {
     initialize.InitConfig()
@@ -49,91 +48,59 @@ func main() {
 			"msg", err.Error(),
 		)
 	}
-	goodsClient = proto.NewGoodsClient(Conn)
-	//TestGetBrandList()
-	//TestGetCategoryBrandList()
-	//TestGetCategoryList()
-	//TestGetSubCategoryList()
-	TestGetGoodsList()
+	inventoryClient = proto.NewInventoryClient(Conn)
+	//TestSetInv(422, 10)
+	//TestInvDetail(421)
+	//TestSell()
+	TestReback()
 }
 
-func TestGetBrandList(){
-	rsp, err := goodsClient.BrandList(context.Background(), &proto.BrandFilterRequest{
+func TestSetInv(goodsId, Num int32){
+	_, err := inventoryClient.SetInv(context.Background(), &proto.GoodsInvInfo{
+		GoodsId: goodsId,
+		Num: Num,
 	})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(rsp.Total)
-	for _, brand := range rsp.Data {
-		fmt.Println(brand.Name)
-	}
+	fmt.Println("设置库存成功")
 }
 
-func TestGetCategoryBrandList(){
-	rsp, err := goodsClient.CategoryBrandList(context.Background(), &proto.CategoryBrandFilterRequest{
+func TestInvDetail(goodsId int32) {
+	rsp, err := inventoryClient.InvDetail(context.Background(), &proto.GoodsInvInfo{
+		GoodsId: goodsId,
 	})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(rsp.Total)
-	fmt.Println(rsp.Data)
+	fmt.Println(rsp.Num)
 }
 
-func TestGetCategoryList(){
-	rsp, err := goodsClient.GetAllCategorysList(context.Background(), &empty.Empty{
+func TestSell() {
+	/*
+		要测试事务的效果，
+	*/
+	_, err := inventoryClient.Sell(context.Background(), &proto.SellInfo{
+		GoodsInfo: []*proto.GoodsInvInfo{
+			{GoodsId: 421, Num: 1},
+			{GoodsId: 422, Num: 1},
+		},
 	})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(rsp.Total)
-	fmt.Println(rsp.JsonData)
+	fmt.Println("库存扣减成功")
 }
 
-func TestGetSubCategoryList(){
-	rsp, err := goodsClient.GetSubCategory(context.Background(), &proto.CategoryListRequest{
-		Id:       135487,
+func TestReback() {
+	_, err := inventoryClient.Reback(context.Background(), &proto.SellInfo{
+		GoodsInfo: []*proto.GoodsInvInfo{
+			{GoodsId: 421, Num: 20},
+			{GoodsId: 422, Num: 20},
+		},
 	})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(rsp.SubCategorys)
-}
-
-func TestGetGoodsList(){
-	rsp, err := goodsClient.GoodsList(context.Background(), &proto.GoodsFilterRequest{
-		TopCategory: 130361,
-		PriceMin: 90,
-		//KeyWords: "深海速冻",
-	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(rsp.Total)
-	for _, good := range rsp.Data {
-		fmt.Println(good.Name, good.ShopPrice)
-	}
-}
-
-func TestBatchGetGoods(){
-	rsp, err := goodsClient.BatchGetGoods(context.Background(), &proto.BatchGoodsIdInfo{
-		Id: []int32{421, 422, 423},
-	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(rsp.Total)
-	for _, good := range rsp.Data {
-		fmt.Println(good.Name, good.ShopPrice)
-	}
-}
-
-func TestGetGoodsDetail(){
-	rsp, err := goodsClient.GetGoodsDetail(context.Background(), &proto.GoodInfoRequest{
-		Id: 421,
-	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(rsp.Name)
-	fmt.Println(rsp.DescImages)
+	fmt.Println("归还成功")
 }
