@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -43,6 +44,11 @@ func (*InventoryServer) Sell(ctx context.Context, req *proto.SellInfo) (*emptypb
 	//对订单里的商品库存进行减扣，要么全部成功，要么全部失败，所以需要用到事务，目前还只是本机事务，最终要用分布式事务
 	tx := global.DB.Begin()
 	for _, goodInfo := range req.GoodsInfo {
+		mutex := global.RedisSync.NewMutex(fmt.Sprintf("goods_%d", goodInfo.GoodsId))
+		if err := mutex.Lock(); err != nil {
+			return nil, status.Errorf(codes.Internal, "获取redis分布式锁异常")
+		}
+
 		var inv model.Inventory
 		if result := global.DB.Where(&model.Inventory{Goods:goodInfo.GoodsId}).First(&inv); result.RowsAffected == 0 {
 			tx.Rollback() //回滚
@@ -58,6 +64,10 @@ func (*InventoryServer) Sell(ctx context.Context, req *proto.SellInfo) (*emptypb
 		//数据不一致问题，不是事务解决的问题，是锁，最终要用分布式锁
 		inv.Stocks -= goodInfo.Num
 		tx.Save(&inv)
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			tx.Rollback()
+			return nil, status.Errorf(codes.Internal, "释放redis分布式锁异常")
+		}
 	}
     tx.Commit()
     return &emptypb.Empty{}, nil
