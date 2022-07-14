@@ -1,0 +1,19 @@
+name: 'order-srv'
+host: '192.168.0.113'
+tags: ['xuwei','order','srv']
+
+mysql:
+  host: '192.168.139.9'
+  port: 3306
+  db:   'shop_order_srv'
+  user: 'root'
+  password: 'root'
+
+consul:
+  host: '192.168.139.9'
+  port: 8500
+
+redis:
+  host: '192.168.139.9'
+  port: 6379
+  expire: 300
