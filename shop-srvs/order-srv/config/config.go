@@ -20,6 +20,10 @@ type ServerConfig struct{
 	MysqlInfo MysqlConfig `mapstructure:"mysql" json:"mysql"`
 	ConsulInfo ConsulConfig `mapstructure:"consul" json:"consul"`
 	RedisInfo   RedisConfig   `mapstructure:"redis" json:"redis"`
+	//商品微服务的配置
+	GoodsSrvInfo GoodsSrvConfig `mapstructure:"goods_srv" json:"goods_srv"`
+	//库存微服务的配置
+	InventorySrvInfo GoodsSrvConfig `mapstructure:"inventory_srv" json:"inventory_srv"`
 }
 
 type NacosConfig struct {
@@ -37,3 +41,8 @@ type RedisConfig struct {
 	Port   int    `mapstructure:"port" json:"port"`
 	Expire int    `mapstructure:"expire" json:"expire"`
 }
+
+type GoodsSrvConfig struct {
+	Name string `mapstructure:"name" json:"name"`
+}
+

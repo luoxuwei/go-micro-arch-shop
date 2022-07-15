@@ -17,3 +17,9 @@ redis:
   host: '192.168.139.9'
   port: 6379
   expire: 300
+
+goods_srv:
+  name: 'goods-srv'
+
+inventory_srv:
+  name: 'inventory-srv'

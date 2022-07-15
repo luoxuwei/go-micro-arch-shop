@@ -29,6 +29,7 @@ func main() {
 	//初始化
 	initialize.InitLogger()
 	initialize.InitConfig()
+	initialize.InitSrvConn()
 	initialize.InitDB()
 	initialize.InitRedsync()
 
