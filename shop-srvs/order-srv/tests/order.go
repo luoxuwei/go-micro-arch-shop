@@ -9,10 +9,9 @@ import (
 	"shop-srvs/order-srv/global"
 	"shop-srvs/order-srv/initialize"
 	"shop-srvs/order-srv/proto"
-	"sync"
 )
 
-var inventoryClient proto.InventoryClient
+var orderClient proto.OrderClient
 
 func main() {
     initialize.InitConfig()
@@ -49,6 +48,60 @@ func main() {
 			"msg", err.Error(),
 		)
 	}
-	inventoryClient = proto.NewInventoryClient(Conn)
+	orderClient = proto.NewOrderClient(Conn)
 
+	//TestCreateCartItem(1,1,422)
+	TestCartItemList(1)
+	//TestUpdateCartItem(1, 422)
+	//TestCreateOrder()
 }
+
+//向购物车中添加商品
+func TestCreateCartItem(userId, nums, goodsId int32){
+	rsp, err := orderClient.CreateCartItem(context.Background(), &proto.CartItemRequest{
+		UserId: userId,
+		Nums: nums,
+		GoodsId: goodsId,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(rsp.Id)
+}
+
+func TestCartItemList(userId int32) {
+	rsp, err := orderClient.CartItemList(context.Background(), &proto.UserInfo{
+		Id: userId,
+	})
+	if err != nil {
+		panic(err)
+	}
+	for _, item := range rsp.Data {
+		fmt.Println(item.Id, item.GoodsId, item.Nums)
+	}
+}
+
+func TestUpdateCartItem(user, goods int32) {
+	_, err := orderClient.UpdateCartItem(context.Background(), &proto.CartItemRequest{
+		UserId: user,
+		GoodsId: goods,
+		Checked: true,
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestCreateOrder() {
+	_, err := orderClient.CreateOrder(context.Background(), &proto.OrderRequest{
+		UserId:  1,
+		Address: "北京市",
+		Name:    "xuwei",
+		Mobile:  "18787878787",
+		Post:    "请尽快发货",
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+

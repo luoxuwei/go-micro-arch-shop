@@ -202,12 +202,6 @@ func (*OrderServer) CreateOrder(ctx context.Context, req *proto.OrderRequest) (*
 		})
 	}
 
-	//扣减库存
-	if _, err = global.InvertoryClient.Sell(context.Background(), &proto.SellInfo{OrderSn:orderInfo.OrderSn, GoodsInfo: goodsInvInfo}); err != nil {
-		return nil, status.Errorf(codes.ResourceExhausted, "扣减库存失败")
-	}
-
-	tx := global.DB.Begin()
 	order := model.OrderInfo{
 		OrderSn: GenerateOrderSn(req.UserId),
 		Address: req.Address,
@@ -216,6 +210,14 @@ func (*OrderServer) CreateOrder(ctx context.Context, req *proto.OrderRequest) (*
 		Post: req.Post,
 		User: req.UserId,
 	}
+
+	//扣减库存
+	if _, err = global.InvertoryClient.Sell(context.Background(), &proto.SellInfo{OrderSn:order.OrderSn, GoodsInfo: goodsInvInfo}); err != nil {
+		return nil, status.Errorf(codes.ResourceExhausted, "扣减库存失败")
+	}
+
+	tx := global.DB.Begin()
+
 	if result := global.DB.Save(&order); result.RowsAffected == 0 {
 		tx.Rollback()
 		return nil, status.Errorf(codes.Internal, "创建订单失败")
@@ -230,7 +232,7 @@ func (*OrderServer) CreateOrder(ctx context.Context, req *proto.OrderRequest) (*
 		return nil, status.Errorf(codes.Internal, "创建订单失败")
 	}
 
-	if result := global.DB.Where(&model.ShoppingCart{User: req.UserId, Checked: true}).Delete(model.ShoppingCart{}); result.RowsAffected == 0 {
+	if result := global.DB.Where(&model.ShoppingCart{User: req.UserId, Checked: true}).Delete(&model.ShoppingCart{}); result.RowsAffected == 0 {
 		tx.Rollback()
 		return nil, status.Errorf(codes.Internal, "创建订单失败")
 	}
