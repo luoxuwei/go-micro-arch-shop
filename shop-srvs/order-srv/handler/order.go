@@ -2,12 +2,15 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"math/rand"
 	"shop-srvs/order-srv/global"
 	"shop-srvs/order-srv/model"
 	"shop-srvs/order-srv/proto"
+	"time"
 )
 
 type OrderServer struct {
@@ -157,4 +160,102 @@ func (*OrderServer) OrderDetail(ctx context.Context, req *proto.OrderRequest) (*
 	}
 
 	return &rsp, nil
+}
+
+func (*OrderServer) CreateOrder(ctx context.Context, req *proto.OrderRequest) (*proto.OrderInfoResponse, error) {
+
+	var goodsIds []int32
+	var shopCarts []model.ShoppingCart
+	//获取购物车中选中的商品, 有可能用户没有选中任何商品就点击结算，所以需要判断一下result
+	if result := global.DB.Where(&model.ShoppingCart{User: req.UserId, Checked: true}).Find(&shopCarts); result.RowsAffected == 0 {
+        return nil, status.Errorf(codes.InvalidArgument, "没有选中的商品")
+	}
+
+	goodsNumMap := make(map[int32]int32)
+	for _, shopCart := range shopCarts {
+		goodsIds = append(goodsIds, shopCart.Goods)
+		goodsNumMap[shopCart.Goods] = shopCart.Nums
+	}
+
+	//从商品微服务中拉取商品列表，需要商品信息中的价格算订单金额，和后续插入订单商品信息
+	var orderAmount float32
+	var orderGoods []*model.OrderGoods
+	var goodsInvInfo []*proto.GoodsInvInfo
+	goods, err := global.GoodsClient.BatchGetGoods(context.Background(), &proto.BatchGoodsIdInfo{Id: goodsIds})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "批量查询商品信息失败")
+	}
+
+	for _, good := range goods.Data {
+		orderAmount += good.ShopPrice * float32(goodsNumMap[good.Id])
+		orderGoods = append(orderGoods, &model.OrderGoods{
+			Goods: good.Id,
+			GoodsName: good.Name,
+			GoodsImage: good.GoodsFrontImage,
+			GoodsPrice: good.ShopPrice,
+			Nums: goodsNumMap[good.Id],
+		})
+
+		goodsInvInfo = append(goodsInvInfo, &proto.GoodsInvInfo{
+			GoodsId: good.Id,
+			Num: goodsNumMap[good.Id],
+		})
+	}
+
+	//扣减库存
+	if _, err = global.InvertoryClient.Sell(context.Background(), &proto.SellInfo{OrderSn:orderInfo.OrderSn, GoodsInfo: goodsInvInfo}); err != nil {
+		return nil, status.Errorf(codes.ResourceExhausted, "扣减库存失败")
+	}
+
+	tx := global.DB.Begin()
+	order := model.OrderInfo{
+		OrderSn: GenerateOrderSn(req.UserId),
+		Address: req.Address,
+		SignerName: req.Name,
+		SingerMobile: req.Mobile,
+		Post: req.Post,
+		User: req.UserId,
+	}
+	if result := global.DB.Save(&order); result.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "创建订单失败")
+	}
+
+	//批量插入订单商品信息
+	for _, orderGood := range orderGoods {
+		orderGood.Order = order.ID
+	}
+	if result := global.DB.CreateInBatches(orderGoods, 100); result.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "创建订单失败")
+	}
+
+	if result := global.DB.Where(&model.ShoppingCart{User: req.UserId, Checked: true}).Delete(model.ShoppingCart{}); result.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "创建订单失败")
+	}
+	tx.Commit()
+    return &proto.OrderInfoResponse{Id: order.ID, OrderSn: order.OrderSn, Total: order.OrderMount}, nil
+}
+
+//订单号的生成规则, 仅仅有时间戳不够，高并发情况下可能多个请求拿到的时间戳一样，
+//加上用户id已经有一定保证，同一个用户不会有那么高的并发，再加上两位随机数，就更有保障
+func GenerateOrderSn(userId int32) string{
+	/*
+	   年月日时分秒+用户id+2位随机数
+	*/
+	now := time.Now()
+	rand.Seed(time.Now().UnixNano())
+	orderSn := fmt.Sprintf("%d%d%d%d%d%d%d%d",
+		now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Nanosecond(),
+		userId, rand.Intn(90)+10,
+	)
+	return orderSn
+}
+
+func (*OrderServer) UpdateOrderStatus(ctx context.Context, req *proto.OrderStatus) (*emptypb.Empty, error) {
+	if result := global.DB.Model(&model.OrderInfo{}).Where("order_sn = ?", req.OrderSn).Update("status", req.Status); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.NotFound, "订单不存在")
+	}
+	return &emptypb.Empty{}, nil
 }
