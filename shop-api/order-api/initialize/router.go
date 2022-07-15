@@ -16,8 +16,9 @@ func InitRouters() *gin.Engine {
 		})
 	})
 
-	ApiGroup := Router.Group("/g/v1")
+	ApiGroup := Router.Group("/o/v1")
 	ApiGroup.Use(middlewares.Cors())
 	router.InitOrderRouter(ApiGroup)
+	router.InitShopCartRouter(ApiGroup)
 	return Router
 }
