@@ -1,0 +1,7 @@
+host: '192.168.139.9'
+port: 8848
+namespace: 'c2d1adaf-2ca6-4db9-ba34-39e04f7062a9'
+user: 'nacos'
+password: 'nacos'
+dataid: 'order-api.json'
+group: 'dev'

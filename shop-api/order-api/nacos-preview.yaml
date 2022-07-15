@@ -1,0 +1,20 @@
+name: 'order-api'
+
+host: '192.168.0.113'
+port: 8088
+tags: ['xuwei','order','api']
+
+order_srv:
+  name: 'order-srv'
+
+consul:
+  host: '192.168.139.9'
+  port: 8500
+
+jwt:
+  key: 'LqyebYfpj30vvaasqtZ9nokn4x3qjhTB'
+
+redis:
+  host: '192.168.139.9'
+  port: 6379
+  expire: 300
