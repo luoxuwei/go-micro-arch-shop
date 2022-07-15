@@ -12,6 +12,7 @@ func InitOrderRouter(Router *gin.RouterGroup) {
 	{
 		OrderRouter.GET("", order.List) //订单列表
 		OrderRouter.GET("/:id", order.Detail)  // 订单详情
+		OrderRouter.POST("",  order.New)  // 新建订单
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"shop-api/order-api/api"
+	"shop-api/order-api/forms"
 	"shop-api/order-api/global"
 	"shop-api/order-api/models"
 	"shop-api/order-api/proto"
@@ -133,4 +134,28 @@ func Detail(ctx *gin.Context) {
 	reMap["goods"] = goodsList
 
 	ctx.JSON(http.StatusOK, reMap)
+}
+
+func New(ctx *gin.Context) {
+	orderForm := forms.CreateOrderForm{}
+	if err := ctx.ShouldBindJSON(&orderForm); err != nil {
+		api.HandleValidatorError(ctx, err)
+	}
+	userId, _ := ctx.Get("userId")
+	rsp, err := global.OrderSrvClient.CreateOrder(context.Background(), &proto.OrderRequest{
+		UserId: int32(userId.(uint)),
+		Name: orderForm.Name,
+		Mobile: orderForm.Mobile,
+		Address: orderForm.Address,
+		Post: orderForm.Post,
+	})
+	if err != nil {
+		zap.S().Errorw("新建订单失败")
+		api.HandleGrpcErrorToHttp(err, ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"id": rsp.Id,
+	})
 }
