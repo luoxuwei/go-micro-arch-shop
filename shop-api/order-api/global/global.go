@@ -11,4 +11,5 @@ var (
 	ServerConfig config.ServerConfig
 	NacosConfig config.NacosConfig
 	OrderSrvClient proto.OrderClient
+	GoodsSrvClient proto.GoodsClient
 )

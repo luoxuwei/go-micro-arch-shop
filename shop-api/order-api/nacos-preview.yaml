@@ -7,6 +7,9 @@ tags: ['xuwei','order','api']
 order_srv:
   name: 'order-srv'
 
+goods_srv:
+  name: 'goods-srv'
+
 consul:
   host: '192.168.139.9'
   port: 8500

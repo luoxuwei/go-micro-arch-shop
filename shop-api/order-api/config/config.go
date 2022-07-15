@@ -27,7 +27,8 @@ type ServerConfig struct {
 	Tags        []string      `mapstructure:"tags" json:"tags"`
 	Port        int           `mapstructure:"port" json:"port"`
 	JWTInfo     JWTConfig     `mapstructure:"jwt" json:"jwt"`
-	OrderSrvInfo OrderSrvConfig `mapstructure:"goods_srv" json:"order_srv"`
+	OrderSrvInfo OrderSrvConfig `mapstructure:"order_srv" json:"order_srv"`
+	GoodsSrvInfo OrderSrvConfig `mapstructure:"goods_srv" json:"goods_srv"`
 	ConsulInfo  ConsulConfig  `mapstructure:"consul" json:"consul"`
 	RedisInfo   RedisConfig   `mapstructure:"redis" json:"redis"`
 }

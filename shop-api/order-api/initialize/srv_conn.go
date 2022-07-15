@@ -11,7 +11,7 @@ import (
 
 func InitSrvConn(){
 	consulInfo := global.ServerConfig.ConsulInfo
-	goodsConn, err := grpc.Dial(
+	orderConn, err := grpc.Dial(
 		fmt.Sprintf("consul://%s:%d/%s?wait=14s", consulInfo.Host, consulInfo.Port, global.ServerConfig.OrderSrvInfo.Name),
 		grpc.WithInsecure(),
 		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`),
@@ -20,5 +20,16 @@ func InitSrvConn(){
 		zap.S().Fatal("[InitSrvConn] 连接 【用户服务失败】")
 	}
 
-	global.OrderSrvClient = proto.NewOrderClient(goodsConn)
+	global.OrderSrvClient = proto.NewOrderClient(orderConn)
+
+	goodsConn, err := grpc.Dial(
+		fmt.Sprintf("consul://%s:%d/%s?wait=14s", consulInfo.Host, consulInfo.Port, global.ServerConfig.GoodsSrvInfo.Name),
+		grpc.WithInsecure(),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`),
+	)
+	if err != nil {
+		zap.S().Fatal("[InitSrvConn] 连接 【用户服务失败】")
+	}
+
+	global.GoodsSrvClient = proto.NewGoodsClient(goodsConn)
 }
