@@ -32,4 +32,15 @@ func InitSrvConn(){
 	}
 
 	global.GoodsSrvClient = proto.NewGoodsClient(goodsConn)
+
+	inventoryConn, err := grpc.Dial(
+		fmt.Sprintf("consul://%s:%d/%s?wait=14s", consulInfo.Host, consulInfo.Port, global.ServerConfig.InventorySrvInfo.Name),
+		grpc.WithInsecure(),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`),
+	)
+	if err != nil {
+		zap.S().Fatal("[InitSrvConn] 连接 【用户服务失败】")
+	}
+
+	global.InventorySrvClient = proto.NewInventoryClient(inventoryConn)
 }

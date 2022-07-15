@@ -29,6 +29,7 @@ type ServerConfig struct {
 	JWTInfo     JWTConfig     `mapstructure:"jwt" json:"jwt"`
 	OrderSrvInfo OrderSrvConfig `mapstructure:"order_srv" json:"order_srv"`
 	GoodsSrvInfo OrderSrvConfig `mapstructure:"goods_srv" json:"goods_srv"`
+	InventorySrvInfo OrderSrvConfig `mapstructure:"inventory_srv" json:"inventory_srv"`
 	ConsulInfo  ConsulConfig  `mapstructure:"consul" json:"consul"`
 	RedisInfo   RedisConfig   `mapstructure:"redis" json:"redis"`
 }
