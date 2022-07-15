@@ -85,3 +85,76 @@ func (*OrderServer) DeleteCartItem(ctx context.Context, req *proto.CartItemReque
 	}
 	return &emptypb.Empty{}, nil
 }
+
+func (*OrderServer) OrderList(ctx context.Context, req *proto.OrderFilterRequest) (*proto.OrderListResponse, error) {
+	var orders []model.OrderInfo
+	var rsp proto.OrderListResponse
+
+	var total int64
+	global.DB.Where(&model.OrderInfo{User: req.UserId}).Count(&total)
+	rsp.Total = int32(total)
+
+	//分页
+	global.DB.Scopes(Paginate(int(req.Pages), int(req.PagePerNums))).Where(&model.OrderInfo{User: req.UserId}).Find(&orders)
+	for _, order := range orders {
+		rsp.Data = append(rsp.Data, &proto.OrderInfoResponse{
+			Id:      order.ID,
+			UserId:  order.User,
+			OrderSn: order.OrderSn,
+			PayType: order.PayType,
+			Status:  order.Status,
+			Post:    order.Post,
+			Total:   order.OrderMount,
+			Address: order.Address,
+			Name:    order.SignerName,
+			Mobile:  order.SingerMobile,
+			AddTime: order.CreatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+	return &rsp, nil
+}
+
+func (*OrderServer) OrderDetail(ctx context.Context, req *proto.OrderRequest) (*proto.OrderInfoDetailResponse, error) {
+	var order model.OrderInfo
+	var rsp proto.OrderInfoDetailResponse
+
+	//需要检查一下权限，确认这个订单的id是否是当前用户的订单，这是必须的，比如有可能是爬虫在爬取订单数据。
+	//如果在web层在查询订单详情时，应该先查询一下订单id是否是当前用户的，但这样需要提供一个检查这个订单id是不是这个用户的接口，
+	//底层服务可以简单的做一下，web层把订单id和用户id一起传过来，
+	//在个人中心可以这样做，但是如果是后台管理系统，web层如果是后台管理系统 那么只传递order的id，如果是电商系统还需要一个用户的id
+	//在底层可以不管，gorm 的 where会忽略是默认值的字段
+	if result := global.DB.Where(&model.OrderInfo{BaseModel:model.BaseModel{ID:req.Id}, User:req.UserId}).First(&order); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.NotFound, "订单不存在")
+	}
+
+	orderInfo := proto.OrderInfoResponse{}
+	orderInfo.Id = order.ID
+	orderInfo.UserId = order.User
+	orderInfo.OrderSn = order.OrderSn
+	orderInfo.PayType = order.PayType
+	orderInfo.Status = order.Status
+	orderInfo.Post = order.Post
+	orderInfo.Total = order.OrderMount
+	orderInfo.Address = order.Address
+	orderInfo.Name = order.SignerName
+	orderInfo.Mobile = order.SingerMobile
+
+	rsp.OrderInfo = &orderInfo
+
+	var orderGoods []model.OrderGoods
+	if result := global.DB.Where(&model.OrderGoods{Order:order.ID}).Find(&orderGoods); result.Error != nil {
+		return nil, result.Error
+	}
+
+	for _, orderGood := range orderGoods {
+		rsp.Goods = append(rsp.Goods, &proto.OrderItemResponse{
+			GoodsId: orderGood.Goods,
+			GoodsName: orderGood.GoodsName,
+			GoodsPrice: orderGood.GoodsPrice,
+			GoodsImage: orderGood.GoodsImage,
+			Nums: orderGood.Nums,
+		})
+	}
+
+	return &rsp, nil
+}
