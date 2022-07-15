@@ -78,3 +78,59 @@ func List(ctx *gin.Context) {
 	reMap["data"] = orderList
 	ctx.JSON(http.StatusOK, reMap)
 }
+
+func Detail(ctx *gin.Context) {
+	id := ctx.Param("id")
+	userId, _ := ctx.Get("userId")
+	i, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"msg": "url格式出错",
+		})
+		return
+	}
+
+	request := proto.OrderRequest{
+		Id: int32(i),
+	}
+	claims, _ := ctx.Get("claims")
+	model := claims.(*models.CustomClaims)
+	//如果是管理员用户则返回所有的订单
+	if model.AuthorityId == 1 {
+		request.UserId = int32(userId.(uint))
+	}
+
+	rsp, err := global.OrderSrvClient.OrderDetail(context.Background(), &request)
+	if err != nil {
+		zap.S().Errorw("获取订单详情失败")
+		api.HandleGrpcErrorToHttp(err, ctx)
+		return
+	}
+	reMap := gin.H{}
+	reMap["id"] = rsp.OrderInfo.Id
+	reMap["status"] = rsp.OrderInfo.Status
+	reMap["user"] = rsp.OrderInfo.UserId
+	reMap["post"] = rsp.OrderInfo.Post
+	reMap["total"] = rsp.OrderInfo.Total
+	reMap["address"] = rsp.OrderInfo.Address
+	reMap["name"] = rsp.OrderInfo.Name
+	reMap["mobile"] = rsp.OrderInfo.Mobile
+	reMap["pay_type"] = rsp.OrderInfo.PayType
+	reMap["order_sn"] = rsp.OrderInfo.OrderSn
+
+	goodsList := make([]interface{}, 0)
+	for _, item := range rsp.Goods {
+		tmpMap := gin.H{
+			"id": item.GoodsId,
+			"name": item.GoodsName,
+			"image": item.GoodsImage,
+			"price": item.GoodsPrice,
+			"nums": item.Nums,
+		}
+
+		goodsList = append(goodsList, tmpMap)
+	}
+	reMap["goods"] = goodsList
+
+	ctx.JSON(http.StatusOK, reMap)
+}
