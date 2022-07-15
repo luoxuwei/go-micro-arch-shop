@@ -9,6 +9,7 @@ import (
 	"shop-api/order-api/forms"
 	"shop-api/order-api/global"
 	"shop-api/order-api/proto"
+	"strconv"
 )
 
 func List(ctx *gin.Context){
@@ -136,4 +137,65 @@ func New(ctx *gin.Context){
 	ctx.JSON(http.StatusOK, gin.H{
 		"id": rsp.Id,
 	})
+}
+
+
+func Delete(ctx *gin.Context){
+	id := ctx.Param("id")
+	i, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"msg":"url格式出错",
+		})
+		return
+	}
+
+	userId, _ := ctx.Get("userId")
+	_, err = global.OrderSrvClient.DeleteCartItem(context.Background(), &proto.CartItemRequest{
+		UserId:  int32(userId.(uint)),
+		GoodsId: int32(i),
+	})
+	if err != nil {
+		zap.S().Errorw("删除购物车记录失败")
+		api.HandleGrpcErrorToHttp(err, ctx)
+		return
+	}
+	ctx.Status(http.StatusOK)
+}
+
+func Update(ctx *gin.Context){
+	// o/v1/421
+	id := ctx.Param("id")
+	i, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"msg":"url格式出错",
+		})
+		return
+	}
+
+	itemForm := forms.ShopCartItemUpdateForm{}
+	if err := ctx.ShouldBindJSON(&itemForm); err != nil {
+		api.HandleValidatorError(ctx, err)
+		return
+	}
+
+	userId, _ := ctx.Get("userId")
+	request := proto.CartItemRequest{
+		UserId:  int32(userId.(uint)),
+		GoodsId: int32(i),
+		Nums:    itemForm.Nums,
+		Checked: false,
+	}
+	if itemForm.Checked != nil {
+		request.Checked = *itemForm.Checked
+	}
+
+	_, err = global.OrderSrvClient.UpdateCartItem(context.Background(), &request)
+	if err!= nil {
+		zap.S().Errorw("更新购物车记录失败")
+		api.HandleGrpcErrorToHttp(err, ctx)
+		return
+	}
+	ctx.Status(http.StatusOK)
 }
