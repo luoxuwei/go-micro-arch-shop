@@ -2,14 +2,16 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"shop-api/order-api/api/order"
 	"shop-api/order-api/api/shop_cart"
 	"shop-api/order-api/middlewares"
 )
 
 func InitOrderRouter(Router *gin.RouterGroup){
-	//OrderRouter := Router.Group("orders")
-	//{
-	//}
+	OrderRouter := Router.Group("orders").Use(middlewares.JWTAuth())
+	{
+		OrderRouter.GET("", order.List) //订单列表
+	}
 }
 
 func InitShopCartRouter(Router *gin.RouterGroup){
