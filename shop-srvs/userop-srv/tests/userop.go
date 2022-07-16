@@ -9,10 +9,11 @@ import (
 	"shop-srvs/userop-srv/global"
 	"shop-srvs/userop-srv/initialize"
 	"shop-srvs/userop-srv/proto"
-	"sync"
 )
 
-var inventoryClient proto.InventoryClient
+var userFavClient proto.UserFavClient
+var messageClient proto.MessageClient
+var addressClient proto.AddressClient
 
 func main() {
     initialize.InitConfig()
@@ -49,6 +50,38 @@ func main() {
 			"msg", err.Error(),
 		)
 	}
-	inventoryClient = proto.NewInventoryClient(Conn)
+	userFavClient = proto.NewUserFavClient(Conn)
+	messageClient = proto.NewMessageClient(Conn)
+	addressClient = proto.NewAddressClient(Conn)
+	TestAddressList()
+	TestMessageList()
+	TestUserFav()
+	Conn.Close()
+}
 
+func TestAddressList(){
+	_, err := addressClient.GetAddressList(context.Background(), &proto.AddressRequest{
+		UserId: 1,
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestMessageList() {
+	_, err := messageClient.MessageList(context.Background(), &proto.MessageRequest{
+		UserId: 1,
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestUserFav() {
+	_, err := userFavClient.GetFavList(context.Background(), &proto.UserFavRequest{
+		UserId: 1,
+	})
+	if err != nil {
+		panic(err)
+	}
 }
