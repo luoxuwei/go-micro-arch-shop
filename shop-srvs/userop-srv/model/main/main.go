@@ -37,6 +37,6 @@ func main() {
 	}
 
 	// 迁移 schema
-	_ = db.AutoMigrate()
+	_ = db.AutoMigrate(&model.LeavingMessages{}, &model.Address{}, &model.UserFav{})
 
 }
