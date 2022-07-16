@@ -20,6 +20,13 @@ type RedisConfig struct {
 	Expire int    `mapstructure:"expire" json:"expire"`
 }
 
+type AlipayConfig struct {
+	AppID        string `mapstructure:"app_id" json:"app_id"`
+	PrivateKey   string `mapstructure:"private_key" json:"private_key"`
+	AliPublicKey string `mapstructure:"ali_public_key" json:"ali_public_key"`
+	NotifyURL    string `mapstructure:"notify_url" json:"notify_url"`
+	ReturnURL    string `mapstructure:"return_url" json:"return_url"`
+}
 
 type ServerConfig struct {
 	Name        string        `mapstructure:"name" json:"name"`
@@ -32,6 +39,7 @@ type ServerConfig struct {
 	InventorySrvInfo OrderSrvConfig `mapstructure:"inventory_srv" json:"inventory_srv"`
 	ConsulInfo  ConsulConfig  `mapstructure:"consul" json:"consul"`
 	RedisInfo   RedisConfig   `mapstructure:"redis" json:"redis"`
+	AliPayInfo       AlipayConfig   `mapstructure:"alipay" json:"alipay"`
 }
 
 type NacosConfig struct {
