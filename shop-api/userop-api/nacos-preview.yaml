@@ -1,0 +1,20 @@
+name: 'userop-api'
+
+host: '192.168.0.113'
+port: 8088
+tags: ['xuwei','userop','api']
+
+userop_srv:
+  name: 'userop-srv'
+
+consul:
+  host: '192.168.139.9'
+  port: 8500
+
+jwt:
+  key: 'LqyebYfpj30vvaasqtZ9nokn4x3qjhTB'
+
+redis:
+  host: '192.168.139.9'
+  port: 6379
+  expire: 300
