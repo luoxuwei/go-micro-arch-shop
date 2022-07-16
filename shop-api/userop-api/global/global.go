@@ -13,4 +13,5 @@ var (
 	AddressSrvClient proto.AddressClient
 	UserFavSrvClient proto.UserFavClient
 	MessageSrvClient proto.MessageClient
+	GoodsSrvClient   proto.GoodsClient
 )

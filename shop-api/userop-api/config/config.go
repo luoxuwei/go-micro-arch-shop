@@ -27,6 +27,7 @@ type ServerConfig struct {
 	Port          int             `mapstructure:"port" json:"port"`
 	JWTInfo       JWTConfig       `mapstructure:"jwt" json:"jwt"`
 	UseropSrvInfo UseropSrvConfig `mapstructure:"userop_srv" json:"userop_srv"`
+	GoodsSrvInfo  UseropSrvConfig `mapstructure:"goods_srv" json:"goods_srv"`
 	ConsulInfo    ConsulConfig    `mapstructure:"consul" json:"consul"`
 	RedisInfo     RedisConfig     `mapstructure:"redis" json:"redis"`
 }

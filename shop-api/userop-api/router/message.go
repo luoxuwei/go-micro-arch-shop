@@ -9,7 +9,7 @@ import (
 func InitMessageRouter(Router *gin.RouterGroup) {
 	MessageRouter := Router.Group("message").Use(middlewares.JWTAuth())
 	{
-		MessageRouter.GET("", message.List)          // 轮播图列表页
-		MessageRouter.POST("", message.New)       //新建轮播图
+		MessageRouter.GET("", message.List)          // 留言列表页
+		MessageRouter.POST("", message.New)       //新建留言
 	}
 }
