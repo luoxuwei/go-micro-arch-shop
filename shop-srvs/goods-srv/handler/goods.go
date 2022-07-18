@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/olivere/elastic/v7"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -50,32 +52,42 @@ func ModelToResponse(goods model.Goods) proto.GoodsInfoResponse {
 func (s *GoodsServer) GoodsList(ctx context.Context, req *proto.GoodsFilterRequest) (*proto.GoodsListResponse, error) {
 	goodsListResponse := &proto.GoodsListResponse{}
 	localDB := global.DB.Model(model.Goods{})
+	//match bool 复合查询
+	q := elastic.NewBoolQuery()
+
 	if req.KeyWords != "" {
-		localDB = localDB.Where("name LIKE ?", "%" +req.KeyWords+"%")
+		//localDB = localDB.Where("name LIKE ?", "%" +req.KeyWords+"%")
+		q = q.Must(elastic.NewMultiMatchQuery(req.KeyWords, "name", "goods_brief"))
 	}
 
 	if req.IsHot {
-		localDB = localDB.Where(model.Goods{IsHot:true})
+		//localDB = localDB.Where(model.Goods{IsHot:true})
+		q = q.Filter(elastic.NewTermQuery("is_hot", req.IsHot))
 	}
 
 	if req.IsNew {
-		localDB = localDB.Where(model.Goods{IsNew:true})
+		//localDB = localDB.Where(model.Goods{IsNew:true})
+		q = q.Filter(elastic.NewTermQuery("is_new", req.IsNew))
 	}
 
 	if req.PriceMin > 0 {
-		localDB = localDB.Where("shop_price >= ?", req.PriceMin)
+		//localDB = localDB.Where("shop_price >= ?", req.PriceMin)
+		q = q.Filter(elastic.NewRangeQuery("shop_price").Gte(req.PriceMin))
 	}
 
 	if req.PriceMax > 0 {
-		localDB = localDB.Where("shop_price <= ?", req.PriceMax)
+		//localDB = localDB.Where("shop_price <= ?", req.PriceMax)
+		q = q.Filter(elastic.NewRangeQuery("shop_price").Lte(req.PriceMax))
 	}
 
 	if req.Brand > 0 {
-		localDB = localDB.Where("brand_id = ?", req.Brand)
+		//localDB = localDB.Where("brand_id = ?", req.Brand)
+		q = q.Filter(elastic.NewTermQuery("brands_id", req.Brand))
 	}
 
 	//通过category去查询商品
 	var subQuery string
+	categoryIds := make([]interface{}, 0)
 	if req.TopCategory > 0 {
 		var category model.Category
 		if result := global.DB.First(&category, req.TopCategory); result.RowsAffected == 0 {
@@ -90,19 +102,61 @@ func (s *GoodsServer) GoodsList(ctx context.Context, req *proto.GoodsFilterReque
 			subQuery = fmt.Sprintf("select id from category WHERE id=%d", req.TopCategory)
 		}
 
-		localDB = localDB.Where(fmt.Sprintf("category_id in (%s)", subQuery))
+		type Result struct {
+			ID int32
+		}
+		var results []Result
+		global.DB.Model(model.Category{}).Raw(subQuery).Scan(&results)
+		for _, re := range results {
+			categoryIds = append(categoryIds, re.ID)
+		}
+		//生成terms查询 相当于sql里的in
+		q = q.Filter(elastic.NewTermsQuery("category_id", categoryIds...))
+		//localDB = localDB.Where(fmt.Sprintf("category_id in (%s)", subQuery))
 	}
 
-   var total int64
-	localDB.Count(&total)
-	goodsListResponse.Total = int32(total)
-    //要在分页之前拿到total
+	//对分页参数做安全校验，
+	//   1.防止pages和nums都为0，这样查不出任何结果
+	//   2.防止pagesize过大，一是性能考虑，二是如果是爬虫，一下就拿到大把数据
+	if req.Pages == 0 {
+		req.Pages = 1
+	}
+
+	switch {
+	case req.PagePerNums > 100:
+		req.PagePerNums = 100
+	case req.PagePerNums <= 0:
+		req.PagePerNums = 10
+	}
+
+	//GET goods/_search
+	result, err := global.EsClient.Search().Index(model.EsGoods{}.GetIndexName()).Query(q).From(int(req.Pages)).Size(int(req.PagePerNums)).Do(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	goodsIds := make([]int32, 0)
+	goodsListResponse.Total = int32(result.Hits.TotalHits.Value)
+	for _, value := range result.Hits.Hits {
+		goods := model.EsGoods{}
+		_ = json.Unmarshal(value.Source, &goods)
+		goodsIds = append(goodsIds, goods.ID)
+	}
+
+   //var total int64
+	//localDB.Count(&total)
+	//goodsListResponse.Total = int32(total)
+   // //要在分页之前拿到total
 
 	var goods []model.Goods
-	result := localDB.Preload("Category").Preload("Brands").Scopes(Paginate(int(req.Pages), int(req.PagePerNums))).Find(&goods)
-    if result.Error != nil {
-    	return nil, result.Error
+	re := localDB.Preload("Category").Preload("Brands").Find(&goods, goodsIds)
+	if re.Error != nil {
+		return nil, re.Error
 	}
+	//result := localDB.Preload("Category").Preload("Brands").Scopes(Paginate(int(req.Pages), int(req.PagePerNums))).Find(&goods)
+    //if result.Error != nil {
+    //	return nil, result.Error
+	//}
 
 	for _, good := range goods {
         goodsInfoResponse := ModelToResponse(good)
