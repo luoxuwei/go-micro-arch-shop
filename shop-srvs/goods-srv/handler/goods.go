@@ -220,7 +220,16 @@ func (s *GoodsServer) CreateGoods(ctx context.Context, req *proto.CreateGoodsInf
 		OnSale: req.OnSale,
 	}
 
-	global.DB.Save(&goods)
+	//global.DB.Save(&goods)
+    //要确保es和mysql操作的一致性，不能在入库是发生一个成功一个失败的情况
+    //所以这里加事务，Save方法会调用afterCreate，可以通过返回值判断是否成功。
+	tx := global.DB.Begin()
+	result := tx.Save(&goods)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, result.Error
+	}
+	tx.Commit()
 
 	return &proto.GoodsInfoResponse{
 		Id:  goods.ID,
@@ -228,9 +237,22 @@ func (s *GoodsServer) CreateGoods(ctx context.Context, req *proto.CreateGoodsInf
 }
 
 func (s *GoodsServer) DeleteGoods(ctx context.Context, req *proto.DeleteGoodsInfo) (*emptypb.Empty, error) {
-	if result := global.DB.Delete(&model.Goods{BaseModel:model.BaseModel{ID:req.Id}}, req.Id); result.Error != nil {
+	tx := global.DB
+	tx.Begin()
+	result := tx.Delete(&model.Goods{BaseModel:model.BaseModel{ID:req.Id}}, req.Id)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, result.Error
+	}
+	tx.Commit()
+
+	if result.RowsAffected == 0 {
 		return nil, status.Errorf(codes.NotFound, "商品不存在")
 	}
+
+	//if result := global.DB.Delete(&model.Goods{BaseModel:model.BaseModel{ID:req.Id}}, req.Id); result.Error != nil {
+	//	return nil, status.Errorf(codes.NotFound, "商品不存在")
+	//}
 	return &emptypb.Empty{}, nil
 }
 
@@ -268,6 +290,13 @@ func (s *GoodsServer) UpdateGoods(ctx context.Context, req *proto.CreateGoodsInf
 	goods.IsHot= req.IsHot
 	goods.OnSale= req.OnSale
 
-	global.DB.Save(&goods)
+	//global.DB.Save(&goods)
+	tx := global.DB.Begin()
+	result := tx.Save(&goods)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, result.Error
+	}
+	tx.Commit()
 	return &emptypb.Empty{}, nil
 }
