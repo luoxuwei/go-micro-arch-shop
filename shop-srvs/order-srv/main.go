@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/apache/rocketmq-client-go/v2"
+	"github.com/apache/rocketmq-client-go/v2/consumer"
 	"net"
 	"os"
 	"os/signal"
@@ -70,10 +72,22 @@ func main() {
 		}
 	}()
 
+	//监听订单超时topic
+	c, _ := rocketmq.NewPushConsumer(
+		consumer.WithNameServer([]string{fmt.Sprintf("%s:%d", global.ServerConfig.RocketMqInfo.Host, global.ServerConfig.RocketMqInfo.Port)}),
+		consumer.WithGroupName("shop-order"),
+	)
+
+	if err := c.Subscribe("order_timeout", consumer.MessageSelector{},handler.OrderTimeout); err != nil {
+		fmt.Println("读取消息失败")
+	}
+	_ = c.Start()
+
 	//接收终止信号
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
+	_ = c.Shutdown()
 	if err = register_client.DeRegister(serviceId); err != nil {
 		zap.S().Info("注销失败")
 	} else {
