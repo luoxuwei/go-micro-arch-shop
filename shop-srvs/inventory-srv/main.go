@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/apache/rocketmq-client-go/v2"
+	"github.com/apache/rocketmq-client-go/v2/consumer"
 	"net"
 	"os"
 	"os/signal"
@@ -68,6 +70,17 @@ func main() {
 			panic("failed to start grpc:" + err.Error())
 		}
 	}()
+
+	//监听库存归还topic
+	c, _ := rocketmq.NewPushConsumer(
+		consumer.WithNameServer([]string{fmt.Sprintf("%s:%d", global.ServerConfig.RocketMqInfo.Host, global.ServerConfig.RocketMqInfo.Port)}),
+		consumer.WithGroupName("shop-inventory"),
+	)
+
+	if err := c.Subscribe("order_reback", consumer.MessageSelector{},handler.AutoReback); err != nil {
+		fmt.Println("读取消息失败")
+	}
+	_ = c.Start()
 
 	//接收终止信号
 	quit := make(chan os.Signal)

@@ -20,6 +20,7 @@ type ServerConfig struct{
 	MysqlInfo MysqlConfig `mapstructure:"mysql" json:"mysql"`
 	ConsulInfo ConsulConfig `mapstructure:"consul" json:"consul"`
 	RedisInfo   RedisConfig   `mapstructure:"redis" json:"redis"`
+	RocketMqInfo ConsulConfig `mapstructure:"rocketmq" json:"rocketmq"`
 }
 
 type NacosConfig struct {

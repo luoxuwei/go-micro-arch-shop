@@ -17,3 +17,7 @@ redis:
   host: '192.168.139.9'
   port: 6379
   expire: 300
+
+rocketmq:
+  host: '192.168.139.9'
+  port: 9876
