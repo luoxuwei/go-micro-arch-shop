@@ -375,7 +375,7 @@ func OrderTimeout(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.
 		//查询订单的支付状态，如果已支付什么都不做，如果未支付，归还库存
 		var order model.OrderInfo
 		if result :=global.DB.Model(model.OrderInfo{}).Where(model.OrderInfo{OrderSn:orderInfo.OrderSn}).First(&order);result.RowsAffected ==0 {
-			return consumer.ConsumeSuccess, nil
+			continue
 		}
 		if order.Status != "TRADE_SUCCESS" {
 			tx := global.DB.Begin()
@@ -387,19 +387,24 @@ func OrderTimeout(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.
 			p, err := rocketmq.NewProducer(producer.WithNameServer([]string{fmt.Sprintf("%s:%d",
 				global.ServerConfig.RocketMqInfo.Host, global.ServerConfig.RocketMqInfo.Port)}))
 			if err != nil {
-				panic("生成producer失败")
+				tx.Rollback()
+				zap.S().Errorf("生成 producer 失败: %s", err.Error())
+				return consumer.ConsumeRetryLater, nil
 			}
 
-			if err = p.Start(); err != nil {panic("启动producer失败")}
+			if err = p.Start(); err != nil {
+				tx.Rollback()
+				zap.S().Errorf("启动producer失败: %s", err.Error())
+				return consumer.ConsumeRetryLater, nil
+			}
 
 			_, err = p.SendSync(context.Background(), primitive.NewMessage("order_reback", msgs[i].Body))
 			if err != nil {
 				tx.Rollback()
-				fmt.Printf("发送失败: %s\n", err)
+				zap.S().Errorf("发送失败: %s", err.Error())
 				return consumer.ConsumeRetryLater, nil
 			}
             tx.Commit()
-			return consumer.ConsumeSuccess, nil
 		}
 	}
 	return consumer.ConsumeSuccess, nil
