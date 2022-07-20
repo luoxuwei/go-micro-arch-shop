@@ -263,10 +263,10 @@ func (o *OrderListener) ExecuteLocalTransaction(msg *primitive.Message) primitiv
 		o.Detail = "删除购物车记录失败"
 		return primitive.CommitMessageState
 	}
-
+	rocketmqInfo := global.ServerConfig.RocketMqInfo
 	//处理订单超时问题，用延迟消息去做。
 	p, err := rocketmq.NewProducer(producer.WithNameServer([]string{fmt.Sprintf("%s:%d",
-		global.ServerConfig.RocketMqInfo.Host, global.ServerConfig.RocketMqInfo.Port)}))
+		rocketmqInfo.Host, rocketmqInfo.Port)}))
 	if err != nil {
 		panic("生成producer失败")
 	}
@@ -304,10 +304,10 @@ func (o *OrderListener) CheckLocalTransaction(msg *primitive.MessageExt) primiti
 
 func (*OrderServer) CreateOrder(ctx context.Context, req *proto.OrderRequest) (*proto.OrderInfoResponse, error) {
 	orderListener := OrderListener{Ctx:ctx}
+	rocketmqInfo := global.ServerConfig.RocketMqInfo
 	p, err := rocketmq.NewTransactionProducer(
 		&orderListener,
-		producer.WithNameServer([]string{fmt.Sprintf("%s:%d",
-			global.ServerConfig.RocketMqInfo.Host, global.ServerConfig.RocketMqInfo.Port)}),
+		producer.WithNameServer([]string{fmt.Sprintf("%s:%d", rocketmqInfo.Host, rocketmqInfo.Port)}),
 	)
 	if err != nil {
 		zap.S().Errorf("生成producer失败: %s", err.Error())
@@ -383,9 +383,9 @@ func OrderTimeout(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.
 			//修改订单的状态为已支付
 			order.Status = "TRADE_CLOSED"
 			tx.Save(&order)
-
+			rocketmqInfo := global.ServerConfig.RocketMqInfo
 			p, err := rocketmq.NewProducer(producer.WithNameServer([]string{fmt.Sprintf("%s:%d",
-				global.ServerConfig.RocketMqInfo.Host, global.ServerConfig.RocketMqInfo.Port)}))
+				rocketmqInfo.Host, rocketmqInfo.Port)}))
 			if err != nil {
 				tx.Rollback()
 				zap.S().Errorf("生成 producer 失败: %s", err.Error())

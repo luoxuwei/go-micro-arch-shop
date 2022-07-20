@@ -71,10 +71,10 @@ func main() {
 			panic("failed to start grpc:" + err.Error())
 		}
 	}()
-
+	rocketmqInfo := global.ServerConfig.RocketMqInfo
 	//监听订单超时topic
 	c, _ := rocketmq.NewPushConsumer(
-		consumer.WithNameServer([]string{fmt.Sprintf("%s:%d", global.ServerConfig.RocketMqInfo.Host, global.ServerConfig.RocketMqInfo.Port)}),
+		consumer.WithNameServer([]string{fmt.Sprintf("%s:%d", rocketmqInfo.Host, rocketmqInfo.Port)}),
 		consumer.WithGroupName("shop-order"),
 	)
 

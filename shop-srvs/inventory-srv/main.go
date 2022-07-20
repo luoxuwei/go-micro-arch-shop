@@ -72,8 +72,9 @@ func main() {
 	}()
 
 	//监听库存归还topic
+	rocketmqInfo := global.ServerConfig.RocketMqInfo
 	c, _ := rocketmq.NewPushConsumer(
-		consumer.WithNameServer([]string{fmt.Sprintf("%s:%d", global.ServerConfig.RocketMqInfo.Host, global.ServerConfig.RocketMqInfo.Port)}),
+		consumer.WithNameServer([]string{fmt.Sprintf("%s:%d", rocketmqInfo.Host, rocketmqInfo.Port)}),
 		consumer.WithGroupName("shop-inventory"),
 	)
 
