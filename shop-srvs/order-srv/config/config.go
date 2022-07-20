@@ -24,6 +24,7 @@ type ServerConfig struct{
 	GoodsSrvInfo GoodsSrvConfig `mapstructure:"goods_srv" json:"goods_srv"`
 	//库存微服务的配置
 	InventorySrvInfo GoodsSrvConfig `mapstructure:"inventory_srv" json:"inventory_srv"`
+	RocketMqInfo ConsulConfig `mapstructure:"rocketmq" json:"rocketmq"`
 }
 
 type NacosConfig struct {
