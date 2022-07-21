@@ -18,3 +18,8 @@ redis:
   host: '192.168.139.9'
   port: 6379
   expire: 300
+
+jaeger:
+  host: '192.168.139.9'
+  port: 6831
+  name: 'goods-api'

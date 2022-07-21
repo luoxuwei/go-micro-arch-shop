@@ -7,7 +7,7 @@ import (
 )
 
 func InitGoodsRouter(Router *gin.RouterGroup){
-	GoodsRouter := Router.Group("goods")
+	GoodsRouter := Router.Group("goods").Use(middlewares.Trace())
 	{
 		GoodsRouter.GET("", middlewares.JWTAuth(), goods.List)
 		GoodsRouter.POST("", middlewares.JWTAuth(), middlewares.IsAdminAuth(), goods.New)
