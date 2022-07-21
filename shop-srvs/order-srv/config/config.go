@@ -1,5 +1,11 @@
 package config
 
+type JaegerConfig struct {
+	Host string `mapstructure:"host" json:"host"`
+	Port int    `mapstructure:"port" json:"port"`
+	Name string `mapstructure:"name" json:"name"`
+}
+
 type MysqlConfig struct{
 	Host string `mapstructure:"host" json:"host"`
 	Port int    `mapstructure:"port" json:"port"`
@@ -25,6 +31,7 @@ type ServerConfig struct{
 	//库存微服务的配置
 	InventorySrvInfo GoodsSrvConfig `mapstructure:"inventory_srv" json:"inventory_srv"`
 	RocketMqInfo ConsulConfig `mapstructure:"rocketmq" json:"rocketmq"`
+	JaegerInfo  JaegerConfig   `mapstructure:"jaeger" json:"jaeger"`
 }
 
 type NacosConfig struct {

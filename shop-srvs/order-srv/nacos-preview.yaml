@@ -27,3 +27,8 @@ inventory_srv:
 rocketmq:
   host: '192.168.139.9'
   port: 9876
+
+jaeger:
+  host: '192.168.139.9'
+  port: 6831
+  name: 'order-api'

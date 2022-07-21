@@ -31,3 +31,8 @@ alipay:
   ali_public_key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhaH/4xfRXA2VZcw/gJ+0a7ZFEtnrT8SY1ha/f2ufSxIzsQKvXcar1lFW0k1Jll/B4pXWd1b0rNhaaTA4oonTHbRfK5F8/Hvc8aKqae9kcaAwyFUtP0I2lDWJw1gLLnzSrPy8x0nbYp4BGvKRqHj0snD57wm1T+tlgIswYcapxh14D5Fr+UBBfLyC13pLhbt0CqqNcx4ttUWvGGMP1VVkcd0nK4oNDH/tQIKnwrqgL1NHvPQi1nSzZrO0gSgNiMwXIfFYJkjvSOTjuS5F2ls5mgBgbxpQL8e/86UFfZjYibtB5Glh70XrDA8paMshsJaeayyPmjcQAMcMuQmn3CgMCwIDAQAB'
   notify_url: 'http:192.168.1.113:8088/o/v1/pay/alipay/notify'
   return_url: '支付完成会提示跳转到商户页面，这个配置就是设置的支付完成跳转的页面'
+
+jaeger:
+  host: '192.168.139.9'
+  port: 6831
+  name: 'order-api'
