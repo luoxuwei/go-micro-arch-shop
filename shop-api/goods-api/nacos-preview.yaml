@@ -23,3 +23,10 @@ jaeger:
   host: '192.168.139.9'
   port: 6831
   name: 'goods-api'
+
+sentinel:
+  resource: 'goods-list'
+  strategy: 0
+  behavior: 0
+  threshold: 20
+  interval: 6000

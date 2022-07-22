@@ -1,5 +1,13 @@
 package config
 
+type SentinelConfig struct {
+	Resource string `mapstructure:"resource" json:"resource"`
+	Strategy int32    `mapstructure:"strategy" json:"strategy"`
+	Behavior int32 `mapstructure:"behavior" json:"behavior"`
+	Threshold float64 `mapstructure:"threshold" json:"threshold"`
+	Interval uint32 `mapstructure:"interval" json:"interval"`
+}
+
 type JaegerConfig struct {
 	Host string `mapstructure:"host" json:"host"`
 	Port int    `mapstructure:"port" json:"port"`
@@ -36,6 +44,7 @@ type ServerConfig struct {
 	ConsulInfo  ConsulConfig  `mapstructure:"consul" json:"consul"`
 	RedisInfo   RedisConfig   `mapstructure:"redis" json:"redis"`
 	JaegerInfo  JaegerConfig   `mapstructure:"jaeger" json:"jaeger"`
+	SentinelInfo SentinelConfig `mapstructure:"sentinel" json:"sentinel"`
 }
 
 type NacosConfig struct {

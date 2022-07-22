@@ -25,7 +25,7 @@ func main() {
 	if err := initialize.InitTrans("zh"); err != nil {
 		panic(err)
 	}
-
+	initialize.InitSentinel()
 	viper.AutomaticEnv()
 	//为了能支持集群部署，线上环境启动获取端口号，如果是本地开发环境为了方便调试，端口号固定
 	debug := viper.GetBool("SHOP_DEBUG")
